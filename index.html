@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบคีย์หวย</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+  <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 w-full max-w-xl shadow-lg space-y-3" id="captureArea">
+    
+    <!-- เมนูตัวเลือกหวย (ย้ายมาไว้บนสุด) -->
+    <div class="flex items-center justify-between bg-blue-100/60 p-2.5 rounded-xl border border-blue-200">
+      <div class="flex items-center gap-2">
+        <select id="lottoType" onchange="updateLottoConfig()" class="font-bold text-slate-700 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs md:text-sm outline-none shadow-sm focus:border-blue-500">
+          <option value="LAO">หวยลาว</option>
+          <option value="TH" selected>หวยไทย</option>
+        </select>
+        <input type="date" id="lottoDate" onchange="updateLottoConfig()" class="text-xs md:text-sm border border-slate-300 rounded-lg p-1 font-semibold text-slate-700 bg-white shadow-sm outline-none focus:border-blue-500">
+      </div>
+      <div class="text-xs md:text-sm font-bold text-red-500 flex items-center gap-1">
+        <span class="text-slate-500 font-normal">เหลือเวลา</span>
+        <span id="countdown">00:00:00</span>
+      </div>
+    </div>
+
+    <!-- 1. ปุ่มเลือกประเภทเลข + ปุ่มจ่ายครึ่ง -->
+    <div class="flex flex-wrap justify-center gap-1.5 items-center">
+      <button onclick="setType('2d')" id="btn-2d" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-amber-400 border-2 border-slate-700 shadow text-xs md:text-sm">2 ตัว</button>
+      <button onclick="setType('2rot')" id="btn-2rot" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">2 กลับ</button>
+      <button onclick="setType('3d')" id="btn-3d" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">3 ตัว</button>
+      <button onclick="setType('3d_bottom')" id="btn-3d_bottom" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">3 ตัวล่าง</button>
+      <button onclick="setType('6rot')" id="btn-6rot" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">6 กลับ</button>
+      <button onclick="setType('wing')" id="btn-wing" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">วิ่ง</button>
+      <button onclick="setType('rood')" id="btn-rood" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">19 ประตู</button>
+      
+      <!-- ปุ่มเปิด/ปิด จ่ายครึ่ง -->
+      <button onclick="toggleHalfPay()" id="btn-half" class="px-3 py-1.5 font-bold rounded-lg bg-slate-200 text-slate-700 border-2 border-transparent text-xs md:text-sm transition shadow-sm">
+        🏷️ จ่ายครึ่ง
+      </button>
+    </div>
+
+    <!-- 2. กล่องคีย์ตัวเลขสะสม -->
+    <div class="bg-blue-100/40 border border-blue-200 rounded-xl p-2.5 min-h-[50px] flex flex-wrap gap-2 items-center justify-center" id="accumulatedBox">
+      <span class="text-slate-400 text-xs w-full text-center" id="emptyAccText">คีย์ตัวเลขเพื่อสะสม (คลิกที่เลขเพื่อลบ)</span>
+    </div>
+
+    <!-- 3. ฟอร์มกรอกเลข และ ราคา -->
+    <div class="bg-blue-100/70 p-3 rounded-xl border border-blue-200 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-700 text-sm">ใส่เลข</span>
+        <input type="text" id="numInput" placeholder="00" maxlength="2" oninput="handleAutoAdd(this)" class="w-16 text-center font-bold text-lg p-1.5 rounded-lg border-2 border-blue-500 focus:outline-none bg-white shadow-inner">
+        <span class="font-bold text-slate-500">=</span>
+      </div>
+
+      <!-- ช่องราคา -->
+      <div class="flex items-center gap-2">
+        <div id="priceTopGroup" class="flex flex-col items-center">
+          <span class="text-xs font-bold text-slate-600 mb-0.5" id="labelTop">บน</span>
+          <input type="number" id="priceTop" placeholder="0" class="w-16 text-center font-bold p-1.5 rounded-lg border border-slate-300 bg-white text-sm">
+        </div>
+        
+        <div id="priceBottomGroup" class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-500 mt-3">x</span>
+          <div class="flex flex-col items-center">
+            <span class="text-xs font-bold text-slate-600 mb-0.5" id="labelBottom">ล่าง</span>
+            <input type="number" id="priceBottom" placeholder="0" class="w-16 text-center font-bold p-1.5 rounded-lg border border-slate-300 bg-white text-sm">
+          </div>
+        </div>
+
+        <div id="priceTodGroup" class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-500 mt-3">x</span>
+          <div class="flex flex-col items-center">
+            <span class="text-xs font-bold text-slate-600 mb-0.5">โต๊ด</span>
+            <input type="number" id="priceTod" placeholder="0" class="w-16 text-center font-bold p-1.5 rounded-lg border border-slate-300 bg-white text-sm">
+          </div>
+        </div>
+      </div>
+
+      <button onclick="addNumbersToBill()" class="bg-amber-400 hover:bg-amber-500 active:scale-95 transition text-slate-800 font-bold px-4 py-2 rounded-xl border border-slate-600 shadow-md text-sm">เพิ่มบิล</button>
+    </div>
+
+    <!-- 4. ช่องแสดงรายการในบิล -->
+    <div class="bg-blue-100/50 border border-blue-300 rounded-xl overflow-hidden divide-y divide-blue-200" id="billBox">
+      <div class="text-center text-slate-400 text-sm py-6 bg-white" id="emptyBillText">ยังไม่มีรายการในบิลนี้</div>
+    </div>
+
+    <!-- 5. ส่วนล่าง: หมายเหตุ, สรุปรวม และปุ่มล้างข้อมูล -->
+    <div class="space-y-2 pt-1">
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-bold text-slate-700 whitespace-nowrap">หมายเหตุ:</span>
+        <input type="text" id="noteInput" placeholder="พิมพ์ชื่อลูกค้า..." class="w-full text-sm font-semibold border-2 border-blue-300 rounded-lg p-1 outline-none bg-white focus:border-blue-500">
+      </div>
+
+      <!-- ตรงกลาง: หัวข้อหวย + ราคารวม -->
+      <div class="text-center pt-1">
+        <div class="text-slate-800 font-bold text-base" id="lottoHeaderDisplay">[รัฐบาล] หวยไทย - 30-07-2026</div>
+        <div class="text-slate-900 font-extrabold text-2xl md:text-3xl">
+          รวม <span id="totalAmount">0.00</span> บาท
+        </div>
+      </div>
+
+      <!-- ปุ่มล้างข้อมูลแบบย่อขนาดเล็ก -->
+      <div class="flex justify-end pt-1">
+        <button onclick="clearAll()" class="bg-slate-500 hover:bg-slate-600 active:scale-95 text-white font-bold px-3 py-1 rounded-lg text-xs flex items-center gap-1 shadow-sm transition">
+          🧹 ล้างข้อมูล
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentType = '2d';
+    let isHalfPay = false;
+    let numbersList = [];
+    let billGroups = [];
+    let timerInterval = null;
+
+    document.getElementById('lottoDate').valueAsDate = new Date();
+
+    function setType(type) {
+      currentType = type;
+      document.querySelectorAll('.type-btn').forEach(btn => {
+        btn.classList.remove('bg-amber-400', 'border-slate-700');
+        btn.classList.add('bg-slate-200', 'border-transparent');
+      });
+      
+      const activeBtn = document.getElementById(`btn-${type}`);
+      activeBtn.classList.add('bg-amber-400', 'border-slate-700');
+      activeBtn.classList.remove('bg-slate-200', 'border-transparent');
+
+      const numInput = document.getElementById('numInput');
+      const pTop = document.getElementById('priceTopGroup');
+      const pBottom = document.getElementById('priceBottomGroup');
+      const pTod = document.getElementById('priceTodGroup');
+      const labelTop = document.getElementById('labelTop');
+      const labelBottom = document.getElementById('labelBottom');
+
+      labelTop.innerText = "บน";
+      labelBottom.innerText = "ล่าง";
+
+      if (type === '2d' || type === '2rot') {
+        numInput.maxLength = 2;
+        numInput.placeholder = "00";
+        pTop.style.display = 'flex';
+        pBottom.style.display = 'flex';
+        pTod.style.display = 'none';
+      } else if (type === '3d') {
+        numInput.maxLength = 3;
+        numInput.placeholder = "000";
+        pTop.style.display = 'flex';
+        pBottom.style.display = 'none';
+        pTod.style.display = 'flex';
+      } else if (type === '3d_bottom') {
+        numInput.maxLength = 3;
+        numInput.placeholder = "000";
+        pTop.style.display = 'none';
+        pBottom.style.display = 'flex';
+        pTod.style.display = 'none';
+      } else if (type === '6rot') {
+        numInput.maxLength = 3;
+        numInput.placeholder = "000";
+        pTop.style.display = 'flex';
+        pBottom.style.display = 'none';
+        pTod.style.display = 'none';
+      } else if (type === 'wing') {
+        numInput.maxLength = 1;
+        numInput.placeholder = "0";
+        labelTop.innerText = "วิ่งบน";
+        labelBottom.innerText = "วิ่งล่าง";
+        pTop.style.display = 'flex';
+        pBottom.style.display = 'flex';
+        pTod.style.display = 'none';
+      } else if (type === 'rood') {
+        numInput.maxLength = 1;
+        numInput.placeholder = "0";
+        pTop.style.display = 'flex';
+        pBottom.style.display = 'flex';
+        pTod.style.display = 'none';
+      }
+      numbersList = [];
+      renderAccumulated();  
+    }
+
+    function toggleHalfPay() {
+      isHalfPay = !isHalfPay;
+      const btn = document.getElementById('btn-half');
+      if (isHalfPay) {
+        btn.classList.remove('bg-slate-200', 'text-slate-700', 'border-transparent');
+        btn.classList.add('bg-red-500', 'text-white', 'border-red-700', 'shadow-md');
+      } else {
+        btn.classList.remove('bg-red-500', 'text-white', 'border-red-700', 'shadow-md');
+        btn.classList.add('bg-slate-200', 'text-slate-700', 'border-transparent');
+      }
+    }
+
+    function getPermutations(str) {
+      if (str.length <= 1) return [str];
+      let permutations = [];
+      for (let i = 0; i < str.length; i++) {
+        let char = str[i];
+        let remaining = str.slice(0, i) + str.slice(i + 1);
+        for (let sub of getPermutations(remaining)) {
+          permutations.push(char + sub);
+        }
+      }
+      return [...new Set(permutations)];
+    }
+
+    function generate2RotNumbers(val) {
+      const reversed = val.split('').reverse().join('');
+      return [...new Set([val, reversed])];
+    }
+
+    function generateRoodNumbers(digit) {
+      let result = [];
+      for (let i = 0; i <= 9; i++) {
+        result.push(`${digit}${i}`);
+      }
+      for (let i = 0; i <= 9; i++) {
+        let num = `${i}${digit}`;
+        if (!result.includes(num)) {
+          result.push(num);
+        }
+      }
+      return result;
+    }
+
+    function addSingleNumber(num) {
+      if (!numbersList.some(item => item.num === num)) {
+        numbersList.push({ num: num, isHalf: isHalfPay });
+      }
+    }
+
+    function handleAutoAdd(input) {
+      input.value = input.value.replace(/[^0-9]/g, '');
+      
+      let reqLen = 2;
+      if (currentType === '3d' || currentType === '3d_bottom' || currentType === '6rot') {
+        reqLen = 3;
+      } else if (currentType === 'wing' || currentType === 'rood') {
+        reqLen = 1;
+      }
+
+      if (input.value.length === reqLen) {
+        if (currentType === '2rot') {
+          generate2RotNumbers(input.value).forEach(num => addSingleNumber(num));
+        } else if (currentType === '6rot') {
+          getPermutations(input.value).forEach(num => addSingleNumber(num));
+        } else if (currentType === 'rood') {
+          generateRoodNumbers(input.value).forEach(num => addSingleNumber(num));
+        } else {
+          addSingleNumber(input.value);
+        }
+        input.value = '';
+        renderAccumulated();
+      }
+    }
+
+    function renderAccumulated() {
+      const box = document.getElementById('accumulatedBox');
+      box.innerHTML = '';
+
+      if (numbersList.length === 0) {
+        box.innerHTML = `<span class="text-slate-400 text-xs w-full text-center" id="emptyAccText">คีย์ตัวเลขเพื่อสะสม (คลิกที่เลขเพื่อลบ)</span>`;
+        return;
+      }
+
+      numbersList.forEach((item, index) => {
+        const tag = document.createElement('div');
+        const bgClass = item.isHalf 
+          ? 'bg-red-100 border-red-400 text-red-600' 
+          : 'bg-emerald-200 border-emerald-400 text-emerald-950';
+
+        tag.className = `${bgClass} border font-extrabold px-2.5 py-0.5 rounded-lg cursor-pointer text-base flex items-center gap-1 shadow-sm hover:opacity-80 transition`;
+        tag.title = 'คลิกเพื่อลบเลขนี้';
+        tag.innerHTML = `<span>${item.num}</span><span class="text-xs opacity-70">✕</span>`;
+        
+        tag.onclick = () => {
+          numbersList.splice(index, 1);
+          renderAccumulated();
+        };
+        box.appendChild(tag);
+      });
+    }
+
+    function addNumbersToBill() {
+      const singleInput = document.getElementById('numInput');
+      let reqLen = (currentType === '3d' || currentType === '3d_bottom' || currentType === '6rot') ? 3 : 
+                   (currentType === 'wing' || currentType === 'rood') ? 1 : 2;
+
+      if (singleInput.value.length === reqLen) {
+        if (currentType === '2rot') {
+          generate2RotNumbers(singleInput.value).forEach(num => addSingleNumber(num));
+        } else if (currentType === '6rot') {
+          getPermutations(singleInput.value).forEach(num => addSingleNumber(num));
+        } else if (currentType === 'rood') {
+          generateRoodNumbers(singleInput.value).forEach(num => addSingleNumber(num));
+        } else {
+          addSingleNumber(singleInput.value);
+        }
+        singleInput.value = '';
+      }
+
+      if (numbersList.length === 0) {
+        alert("กรุณากรอกตัวเลขอย่างน้อย 1 ชุดก่อนเพิ่มบิล");
+        return;
+      }
+
+      const topVal = parseFloat(document.getElementById('priceTop').value) || 0;
+      const bottomVal = parseFloat(document.getElementById('priceBottom').value) || 0;
+      const todVal = parseFloat(document.getElementById('priceTod').value) || 0;
+
+      let typeTitle = '';
+      let labelFormat = 'บน x ล่าง';
+      let priceFormat = '';
+      let multiplier = 0;
+
+      if (currentType === '2d') {
+        typeTitle = '2 ตัว';
+        priceFormat = `${topVal} x ${bottomVal}`;
+        multiplier = topVal + bottomVal;
+      } else if (currentType === '2rot') {
+        typeTitle = '2 กลับ';
+        priceFormat = `${topVal} x ${bottomVal}`;
+        multiplier = topVal + bottomVal;
+      } else if (currentType === '3d') {
+        typeTitle = '3 ตัว';
+        priceFormat = `${topVal} x ${todVal}`;
+        multiplier = topVal + todVal;
+      } else if (currentType === '3d_bottom') {
+        typeTitle = '3 ตัว';
+        priceFormat = `0 x ${bottomVal}`;
+        multiplier = bottomVal;
+      } else if (currentType === '6rot') {
+        typeTitle = '6 กลับ';
+        priceFormat = `${topVal} x 0`;
+        multiplier = topVal;
+      } else if (currentType === 'wing') {
+        typeTitle = 'วิ่ง';
+        labelFormat = 'วิ่งบน x วิ่งล่าง';
+        priceFormat = `${topVal} x ${bottomVal}`;
+        multiplier = topVal + bottomVal;
+      } else if (currentType === 'rood') {
+        typeTitle = 'รูด';
+        priceFormat = `${topVal} x ${bottomVal}`;
+        multiplier = topVal + bottomVal;
+      }
+
+      if (multiplier === 0) {
+        alert("กรุณากรอกราคาอย่างน้อย 1 ช่อง");
+        return;
+      }
+
+      const totalGroupPrice = numbersList.length * multiplier;
+
+      billGroups.push({
+        typeTitle: typeTitle,
+        labelFormat: labelFormat,
+        priceFormat: priceFormat,
+        totalPrice: totalGroupPrice,
+        numbers: JSON.parse(JSON.stringify(numbersList))
+      });
+
+      numbersList = [];
+      document.getElementById('numInput').value = '';
+      document.getElementById('priceTop').value = '';
+      document.getElementById('priceBottom').value = '';
+      document.getElementById('priceTod').value = '';
+
+      renderAccumulated();
+      renderBill();
+    }
+
+    function renderBill() {
+      const billBox = document.getElementById('billBox');
+      billBox.innerHTML = '';
+
+      if (billGroups.length === 0) {
+        billBox.innerHTML = `<div class="text-center text-slate-400 text-sm py-6 bg-white" id="emptyBillText">ยังไม่มีรายการในบิลนี้</div>`;
+        document.getElementById('totalAmount').innerText = '0.00';
+        return;
+      }
+
+      let grandTotal = 0;
+
+      billGroups.forEach((group, idx) => {
+        grandTotal += group.totalPrice;
+
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-12 items-center bg-white min-h-[60px]';
+        
+        row.innerHTML = `
+          <div class="col-span-4 bg-blue-100/60 p-2 text-center border-r border-blue-200 self-stretch flex flex-col justify-center">
+            <div class="text-slate-700 font-normal text-xs md:text-sm">${group.typeTitle}</div>
+            <div class="text-slate-500 text-[11px]">${group.labelFormat}</div>
+            <div class="text-slate-900 font-extrabold text-sm md:text-base mt-0.5">${group.priceFormat}</div>
+          </div>
+
+          <div class="col-span-7 p-2.5 text-slate-800 font-extrabold text-base md:text-lg leading-relaxed flex flex-wrap gap-x-2 gap-y-1 items-center max-h-[150px] overflow-y-auto">
+            ${group.numbers.map(item => `
+              <span class="${item.isHalf ? 'text-red-600 font-bold' : ''}">
+                ${item.num}
+              </span>
+            `).join('')}
+          </div>
+
+          <div class="col-span-1 p-1 text-center flex justify-center items-center">
+            <button onclick="removeGroup(${idx})" class="text-red-400 hover:text-red-600 transition p-1" title="ลบรายการนี้">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        `;
+
+        billBox.appendChild(row);
+      });
+
+      document.getElementById('totalAmount').innerText = grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function removeGroup(index) {
+      billGroups.splice(index, 1);
+      renderBill();
+    }
+
+    function clearAll() {
+      numbersList = [];
+      billGroups = [];
+      document.getElementById('numInput').value = '';
+      document.getElementById('priceTop').value = '';
+      document.getElementById('priceBottom').value = '';
+      document.getElementById('priceTod').value = '';
+      document.getElementById('noteInput').value = '';
+      renderAccumulated();
+      renderBill();
+    }
+
+    function updateLottoConfig() {
+      if (timerInterval) clearInterval(timerInterval);
+
+      const lottoType = document.getElementById('lottoType').value;
+      const dateVal = document.getElementById('lottoDate').value;
+
+      if (!dateVal) return;
+
+      const [year, month, day] = dateVal.split('-').map(Number);
+      const closeHour = (lottoType === 'TH') ? 15 : 20;
+      const closeMinute = 20;
+
+      const formattedDate = `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0')}-${year}`;
+      const headerText = lottoType === 'TH' ? `[รัฐบาล] หวยไทย - ${formattedDate}` : `[หวยต่างประเทศ] หวยลาว - ${formattedDate}`;
+      document.getElementById('lottoHeaderDisplay').innerText = headerText;
+
+      const targetTime = new Date(year, month - 1, day, closeHour, closeMinute, 0).getTime();
+
+      timerInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const diff = targetTime - now;
+
+        if (diff <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('countdown').innerText = "ปิดรับแทงแล้ว";
+          return;
+        }
+
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('countdown').innerText = 
+          `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    setType('2d');
+    updateLottoConfig();
+  </script>
+</body>
+</html>
