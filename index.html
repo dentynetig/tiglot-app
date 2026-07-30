@@ -21,7 +21,7 @@
 
   <div class="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 w-full max-w-lg shadow-2xl space-y-4" id="captureArea">
     
-    <!-- Header & เมนูเลือกหวย + นับถอยหลัง (ย้ายมาไว้จุดนี้) -->
+    <!-- Header & เมนูเลือกหวย + นับถอยหลัง -->
     <div class="bg-slate-800 p-3.5 rounded-2xl border border-slate-700 text-white shadow-md space-y-3">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5">
         <div class="w-full sm:w-auto">
@@ -41,7 +41,7 @@
         </div>
       </div>
 
-      <!-- แถบแสดงเวลานับถอยหลังใหม่ที่ Header -->
+      <!-- แถบแสดงเวลานับถอยหลัง -->
       <div class="flex items-center justify-between bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-700/60 text-xs">
         <span class="text-slate-400 font-medium">⏳ สถานะการปิดรับ:</span>
         <span id="countdown" class="font-bold text-red-400 bg-slate-800 px-2.5 py-0.5 rounded-md border border-slate-700">00:00:00</span>
@@ -119,11 +119,15 @@
         <input type="text" id="noteInput" placeholder="พิมพ์ชื่อลูกค้า/โพย..." class="w-full text-xs font-semibold border border-slate-200 rounded-xl p-2 outline-none bg-slate-50 focus:bg-white focus:border-amber-400 transition">
       </div>
 
-      <!-- สรุปผลยอดรวมอย่างเดียว -->
+      <!-- สรุปผลยอดรวม + วันที่เวลาทำรายการท้ายบิล -->
       <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-inner text-center space-y-1">
         <div class="text-amber-400 font-bold text-xs sm:text-sm tracking-wide" id="lottoHeaderDisplay">[รัฐบาล] หวยไทย</div>
         <div class="text-2xl sm:text-3xl font-black text-white pt-1">
           รวมทั้งสิ้น <span id="totalAmount" class="text-amber-400">0.00</span> บาท
+        </div>
+        <!-- แสดงวันที่และเวลาทำรายการ -->
+        <div id="transactionTime" class="text-[11px] text-slate-400 font-medium pt-2 border-t border-slate-800/80 mt-2">
+          เวลาทำรายการ: -
         </div>
       </div>
 
@@ -429,6 +433,7 @@
       if (billGroups.length === 0) {
         billBox.innerHTML = `<div class="text-center text-slate-400 text-xs py-8" id="emptyBillText">ยังไม่มีรายการในบิลนี้</div>`;
         document.getElementById('totalAmount').innerText = '0.00';
+        document.getElementById('transactionTime').innerText = 'เวลาทำรายการ: -';
         return;
       }
 
@@ -466,6 +471,21 @@
       });
 
       document.getElementById('totalAmount').innerText = grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      // ดึง วัน เดือน ปี เวลา ปัจจุบันมาอัปเดตที่ท้ายบิล
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      const timeStr = now.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+
+      document.getElementById('transactionTime').innerText = `ทำรายการเมื่อ: ${dateStr} เวลา ${timeStr} น.`;
     }
 
     function removeGroup(index) {
