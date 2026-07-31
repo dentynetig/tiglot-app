@@ -6,134 +6,126 @@
   <title>บ้านหวยTigkakit</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* ซ่อนลูกศรเพิ่ม-ลดราคาในช่อง input number */
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
-      -webkit-appearance: none; 
-      margin: 0; 
+    /* ซ่อนลูกศรเลื่อนขึ้น-ลง (Spinner) ใน input number */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
-    input[type=number] {
+    input[type="number"] {
       -moz-appearance: textfield;
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-800 flex items-center justify-center min-h-screen p-2 sm:p-4 font-sans">
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center min-h-screen p-5">
 
-  <div class="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 w-full max-w-lg shadow-2xl space-y-4" id="captureArea">
+  <div class="bg-white/95 backdrop-blur-xl border-blue-200 rounded-2xl p-5 w-full max-w-xl shadow-lg space-y-3" id="captureArea">
     
-    <!-- Header & เมนูเลือกหวย + นับถอยหลัง -->
-    <div class="bg-slate-800 p-3.5 rounded-2xl border border-slate-700 text-white shadow-md space-y-3">
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5">
-        <div class="w-full sm:w-auto">
-          <label class="text-[11px] text-slate-400 block mb-1">เลือกประเภทหวย</label>
-          <select id="lottoType" onchange="updateLottoConfig()" class="w-full font-bold text-slate-900 bg-amber-400 border border-amber-300 rounded-xl px-3 py-1.5 text-xs sm:text-sm outline-none shadow-sm cursor-pointer focus:ring-2 focus:ring-amber-300">
-            <option value="TH">หวยไทย (ปิด 15:20)</option>
-            <option value="LAO">หวยลาว (ปิด 20:20)</option>
-            <option value="LAO_STAR">หวยลาวสตาร์ (ปิด 15:30)</option>
-            <option value="HANOI_SPECIAL">หวยฮานอยพิเศษ (ปิด 17:00)</option>
-            <option value="HANOI_NORMAL">หวยฮานอยปกติ (ปิด 18:00)</option>
-            <option value="HANOI_VIP">หวยฮานอย VIP (ปิด 19:00)</option>
-          </select>
-        </div>
-        <div class="w-full sm:w-auto">
-          <label class="text-[11px] text-slate-400 block mb-1">ประจำวันที่</label>
-          <input type="date" id="lottoDate" onchange="updateLottoConfig()" class="w-full text-xs sm:text-sm border border-slate-600 rounded-xl p-1.5 font-semibold text-white bg-slate-700 shadow-sm outline-none focus:border-amber-400">
-        </div>
+    <!-- เมนูตัวเลือกหวย -->
+    <div class="flex items-center justify-between bg-blue-100/60 p-2.5 rounded-xl border border-blue-200">
+      <div class="flex items-center gap-2">
+        <select id="lottoType" onchange="updateLottoConfig()" class="font-bold text-slate-700 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs md:text-sm outline-none shadow-sm focus:border-blue-500">
+          <option value="LAO">หวยลาว ปิด20:20น.</option>
+          <option value="TH" selected>หวยไทย ปิด15:20น.</option>
+          <option value="LAO_STAR">หวยลาวสตาร์ ปิด15:30น.</option>
+          <option value="HANOI_SPECIAL">หวยฮานอยพิเศษ ปิด17:00น.</option>
+          <option value="HANOI_NORMAL">หวยฮานอยปกติปิด18:00น.</option>
+          <option value="HANOI_VIP">หวยฮานอย VIPปิด19:00น.</option>
+        </select>
+        <input type="date" id="lottoDate" onchange="updateLottoConfig()" class="text-xs md:text-sm border border-slate-300 rounded-lg p-1 font-semibold text-slate-700 bg-white shadow-sm outline-none focus:border-blue-500">
       </div>
-
-      <!-- แถบแสดงเวลานับถอยหลัง -->
-      <div class="flex items-center justify-between bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-700/60 text-xs">
-        <span class="text-slate-400 font-medium">⏳ สถานะการปิดรับ:</span>
-        <span id="countdown" class="font-bold text-red-400 bg-slate-800 px-2.5 py-0.5 rounded-md border border-slate-700">00:00:00</span>
+      <div class="text-xs md:text-sm font-bold text-red-500 flex items-center gap-1">
+        <span class="text-slate-500 font-normal">เหลือเวลา</span>
+        <span id="countdown">00:00:00</span>
       </div>
     </div>
 
-    <!-- 1. ปุ่มเลือกประเภทเลข + ปุ่มจ่ายครึ่ง -->
-    <div class="grid grid-cols-4 sm:grid-cols-4 gap-1.5 items-center">
-      <button onclick="setType('2d')" id="btn-2d" class="type-btn py-2 font-bold rounded-xl bg-amber-400 border-2 border-slate-800 text-slate-900 shadow text-xs">2 ตัว</button>
-      <button onclick="setType('2rot')" id="btn-2rot" class="type-btn py-2 font-bold rounded-xl bg-slate-100 border-2 border-transparent text-slate-600 text-xs">2 กลับ</button>
-      <button onclick="setType('3d')" id="btn-3d" class="type-btn py-2 font-bold rounded-xl bg-slate-100 border-2 border-transparent text-slate-600 text-xs">3 ตัว</button>
-      <button onclick="setType('3d_bottom')" id="btn-3d_bottom" class="type-btn py-2 font-bold rounded-xl bg-slate-100 border-2 border-transparent text-slate-600 text-xs">3 ล่าง</button>
-      <button onclick="setType('6rot')" id="btn-6rot" class="type-btn py-2 font-bold rounded-xl bg-slate-100 border-2 border-transparent text-slate-600 text-xs">6 กลับ</button>
-      <button onclick="setType('wing')" id="btn-wing" class="type-btn py-2 font-bold rounded-xl bg-slate-100 border-2 border-transparent text-slate-600 text-xs">วิ่ง</button>
-      <button onclick="setType('rood')" id="btn-rood" class="type-btn py-2 font-bold rounded-xl bg-slate-100 border-2 border-transparent text-slate-600 text-xs">19 ประตู</button>
+    <!-- 1. ปุ่มเลือกประเภทเลข + ปุ่มกลับเลข + ปุ่มจ่ายครึ่ง -->
+    <div class="flex flex-wrap justify-center gap-1.5 items-center">
+      <button onclick="setType('2d')" id="btn-2d" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-amber-400 border-2 border-slate-700 shadow text-xs md:text-sm">2 ตัว</button>
+      <button onclick="setType('3d')" id="btn-3d" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">3 ตัว</button>
+      <button onclick="setType('3d_bottom')" id="btn-3d_bottom" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">3 ตัวล่าง</button>
+      <button onclick="setType('wing')" id="btn-wing" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">วิ่ง</button>
+      <button onclick="setType('rood')" id="btn-rood" class="type-btn px-3 py-1.5 font-bold rounded-lg bg-slate-200 border-2 border-transparent text-xs md:text-sm">รูด</button>
       
-      <!-- ปุ่มจ่ายครึ่ง -->
-      <button onclick="toggleHalfPay()" id="btn-half" class="py-2 font-bold rounded-xl bg-slate-100 text-slate-600 border-2 border-transparent text-xs transition active:scale-95">
+      <!-- ปุ่มเปิด/ปิด กลับเลข -->
+      <button onclick="toggleReverse()" id="btn-reverse" class="px-3 py-1.5 font-bold rounded-lg bg-slate-200 text-slate-700 border-2 border-transparent text-xs md:text-sm transition shadow-sm">
+        🔄 กลับเลข
+      </button>
+
+      <!-- ปุ่มเปิด/ปิด จ่ายครึ่ง -->
+      <button onclick="toggleHalfPay()" id="btn-half" class="px-3 py-1.5 font-bold rounded-lg bg-slate-200 text-slate-700 border-2 border-transparent text-xs md:text-sm transition shadow-sm">
         🏷️ จ่ายครึ่ง
       </button>
     </div>
 
     <!-- 2. กล่องคีย์ตัวเลขสะสม -->
-    <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-3 min-h-[60px] flex flex-wrap gap-1.5 items-center justify-center" id="accumulatedBox">
-      <span class="text-slate-400 text-xs text-center" id="emptyAccText">คีย์ตัวเลขเพื่อสะสม (กดที่เลขเพื่อลบ)</span>
+    <div class="bg-blue-100/40 border border-blue-200 rounded-xl p-2.5 min-h-[50px] flex flex-wrap gap-2 items-center justify-center" id="accumulatedBox">
+      <span class="text-slate-400 text-xs w-full text-center" id="emptyAccText">คีย์ตัวเลขเพื่อสะสม (คลิกที่เลขเพื่อลบ)</span>
     </div>
 
-    <!-- 3. ฟอร์มกรอกเลข และ ราคา -->
-    <div class="bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200 space-y-3">
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-slate-700 text-xs sm:text-sm">ใส่เลข</span>
-          <input type="text" id="numInput" placeholder="00" maxlength="2" oninput="handleAutoAdd(this)" class="w-20 text-center font-extrabold text-xl py-1 rounded-xl border-2 border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white shadow-inner text-slate-900">
-        </div>
-
-        <!-- ช่องราคา -->
-        <div class="flex items-center gap-1.5">
-          <div id="priceTopGroup" class="flex flex-col items-center">
-            <span class="text-[10px] font-bold text-slate-500 mb-0.5" id="labelTop">บน</span>
-            <input type="number" id="priceTop" placeholder="0" class="w-14 text-center font-bold py-1 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm focus:outline-none focus:border-amber-500">
-          </div>
-          
-          <div id="priceBottomGroup" class="flex items-center gap-1.5">
-            <span class="text-xs font-bold text-slate-400 mt-3">x</span>
-            <div class="flex flex-col items-center">
-              <span class="text-[10px] font-bold text-slate-500 mb-0.5" id="labelBottom">ล่าง</span>
-              <input type="number" id="priceBottom" placeholder="0" class="w-14 text-center font-bold py-1 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm focus:outline-none focus:border-amber-500">
-            </div>
-          </div>
-
-          <div id="priceTodGroup" class="flex items-center gap-1.5">
-            <span class="text-xs font-bold text-slate-400 mt-3">x</span>
-            <div class="flex flex-col items-center">
-              <span class="text-[10px] font-bold text-slate-500 mb-0.5">โต๊ด</span>
-              <input type="number" id="priceTod" placeholder="0" class="w-14 text-center font-bold py-1 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm focus:outline-none focus:border-amber-500">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button id="addBillBtn" onclick="addNumbersToBill()" class="w-full bg-slate-900 hover:bg-slate-800 active:scale-95 transition text-amber-400 font-bold py-2.5 rounded-xl shadow-md text-sm border border-slate-700 flex items-center justify-center gap-2">
-        ➕ เพิ่มรายการลงบิล
-      </button>
-    </div>
-
-    <!-- 4. ช่องแสดงรายการในบิล (ปรับแก้ไข: เอา max-h ออกเพื่อให้ขยายเต็มตามจำนวนรายการ แคปรูปได้ครบไม่ติด Scrollbar) -->
-    <div class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-200" id="billBox">
-      <div class="text-center text-slate-400 text-xs py-8" id="emptyBillText">ยังไม่มีรายการในบิลนี้</div>
-    </div>
-
-    <!-- 5. ส่วนล่าง: หมายเหตุ, สรุปรวม และปุ่มล้างข้อมูล -->
-    <div class="space-y-2.5 pt-1 border-t border-slate-100">
+    <!-- 3. ฟอร์มกรอกเลข และ ราคา (ดึงสไตล์เดิมที่สวยงามกลับมา) -->
+    <div class="bg-blue-100/70 p-3 rounded-xl border border-blue-200 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2">
-        <span class="text-xs font-bold text-slate-600 whitespace-nowrap">หมายเหตุ:</span>
-        <input type="text" id="noteInput" placeholder="พิมพ์ชื่อลูกค้า/โพย..." class="w-full text-xs font-semibold border border-slate-200 rounded-xl p-2 outline-none bg-slate-50 focus:bg-white focus:border-amber-400 transition">
+        <span class="font-bold text-slate-700 text-sm">ใส่เลข</span>
+        <input type="text" id="numInput" placeholder="00" maxlength="2" oninput="handleAutoAdd(this)" class="w-16 text-center font-bold text-lg p-1.5 rounded-lg border-2 border-blue-500 focus:outline-none bg-white shadow-inner">
+        <span class="font-bold text-slate-500">=</span>
       </div>
 
-      <!-- สรุปผลยอดรวม (ปรับแก้ไข: ปรับขนาดให้กะทัดรัด ประหยัดพื้นที่) -->
-      <div class="bg-slate-900 text-white px-3.5 py-2.5 rounded-xl shadow-inner text-center space-y-0.5">
-        <div class="text-amber-400 font-bold text-xs" id="lottoHeaderDisplay">[รัฐบาล] หวยไทย</div>
-        <div class="text-lg font-black text-white">
-          ยอดรวม <span id="totalAmount" class="text-amber-400 text-xl sm:text-2xl">0.00</span> บาท
+      <!-- ช่องราคา (รูปแบบดั้งเดิม) -->
+      <div class="flex items-center gap-2">
+        <div id="priceTopGroup" class="flex flex-col items-center">
+          <span class="text-xs font-bold text-slate-600 mb-0.5" id="labelTop">บน</span>
+          <input type="number" id="priceTop" placeholder="0" class="w-16 text-center font-bold p-1.5 rounded-lg border border-slate-300 bg-white text-sm">
         </div>
-        <div id="transactionTime" class="text-[10px] text-slate-400 font-normal opacity-90 pt-0.5">
+        
+        <div id="priceBottomGroup" class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-500 mt-3">x</span>
+          <div class="flex flex-col items-center">
+            <span class="text-xs font-bold text-slate-600 mb-0.5" id="labelBottom">ล่าง</span>
+            <input type="number" id="priceBottom" placeholder="0" class="w-16 text-center font-bold p-1.5 rounded-lg border border-slate-300 bg-white text-sm">
+          </div>
+        </div>
+
+        <div id="priceTodGroup" class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-500 mt-3">x</span>
+          <div class="flex flex-col items-center">
+            <span class="text-xs font-bold text-slate-600 mb-0.5">โต๊ด</span>
+            <input type="number" id="priceTod" placeholder="0" class="w-16 text-center font-bold p-1.5 rounded-lg border border-slate-300 bg-white text-sm">
+          </div>
+        </div>
+      </div>
+
+      <button onclick="addNumbersToBill()" class="bg-amber-400 hover:bg-amber-500 active:scale-95 transition text-slate-800 font-bold px-4 py-2 rounded-xl border border-slate-600 shadow-md text-sm">เพิ่มบิล</button>
+    </div>
+
+    <!-- 4. ช่องแสดงรายการในบิล -->
+    <div class="bg-blue-100/50 border border-blue-300 rounded-xl overflow-hidden divide-y divide-blue-200" id="billBox">
+      <div class="text-center text-slate-400 text-sm py-6 bg-white" id="emptyBillText">ยังไม่มีรายการในบิลนี้</div>
+    </div>
+
+    <!-- 5. ส่วนล่าง: หมายเหตุ, สรุปรวม, เวลาทำรายการ และปุ่มล้างข้อมูล -->
+    <div class="space-y-2 pt-1">
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-bold text-slate-700 whitespace-nowrap">หมายเหตุ:</span>
+        <input type="text" id="noteInput" placeholder="พิมพ์ชื่อลูกค้า..." class="w-full text-sm font-semibold border-2 border-blue-300 rounded-lg p-1 outline-none bg-white focus:border-blue-500">
+      </div>
+
+      <!-- ตรงกลาง: หัวข้อหวย + ราคารวม + เวลาบันทึกบิล -->
+      <div class="text-center pt-1">
+        <div class="text-slate-800 font-bold text-base" id="lottoHeaderDisplay">[รัฐบาล] หวยไทย - 30-07-2026</div>
+        <div class="text-slate-900 font-extrabold text-2xl md:text-3xl">
+          รวม <span id="totalAmount">0.00</span> บาท
+        </div>
+        <div class="text-xs font-semibold text-slate-500 mt-1" id="createdTimeDisplay">
           เวลาทำรายการ: -
         </div>
       </div>
 
-      <!-- ปุ่มล้างข้อมูล -->
-      <div class="flex justify-end">
-        <button onclick="clearAll()" class="bg-red-50 hover:bg-red-100 text-red-600 active:scale-95 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 border border-red-200 transition">
-          🧹 ล้างข้อมูลทั้งหมด
+      <!-- ปุ่มล้างข้อมูลแบบย่อขนาดเล็ก -->
+      <div class="flex justify-end pt-1">
+        <button onclick="clearAll()" class="bg-slate-500 hover:bg-slate-600 active:scale-95 text-white font-bold px-3 py-1 rounded-lg text-xs flex items-center gap-1 shadow-sm transition">
+          🧹 ล้างข้อมูล
         </button>
       </div>
     </div>
@@ -143,33 +135,38 @@
   <script>
     let currentType = '2d';
     let isHalfPay = false;
+    let isReverse = false;
     let numbersList = [];
     let billGroups = [];
     let timerInterval = null;
-    let isExpired = false;
-
-    // กำหนดเวลาปิดรับหวยแต่ละประเภท (ชั่วโมง:นาที)
-    const LOTTO_CONFIG = {
-      'TH': { name: '[รัฐบาล] หวยไทย', hour: 15, minute: 20 },
-      'LAO': { name: '[ต่างประเทศ] หวยลาว', hour: 20, minute: 20 },
-      'LAO_STAR': { name: '[ต่างประเทศ] หวยลาวสตาร์', hour: 15, minute: 30 },
-      'HANOI_SPECIAL': { name: '[ต่างประเทศ] หวยฮานอยพิเศษ', hour: 17, minute: 0 },
-      'HANOI_NORMAL': { name: '[ต่างประเทศ] หวยฮานอยปกติ', hour: 18, minute: 0 },
-      'HANOI_VIP': { name: '[ต่างประเทศ] หวยฮานอย VIP', hour: 19, minute: 0 }
-    };
 
     document.getElementById('lottoDate').valueAsDate = new Date();
+
+    function updateTransactionTime() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      const timeStr = now.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      document.getElementById('createdTimeDisplay').innerText = `เวลาทำรายการ: ${dateStr} ${timeStr} น.`;
+    }
 
     function setType(type) {
       currentType = type;
       document.querySelectorAll('.type-btn').forEach(btn => {
-        btn.classList.remove('bg-amber-400', 'border-slate-800', 'text-slate-900');
-        btn.classList.add('bg-slate-100', 'border-transparent', 'text-slate-600');
+        btn.classList.remove('bg-amber-400', 'border-slate-700');
+        btn.classList.add('bg-slate-200', 'border-transparent');
       });
       
       const activeBtn = document.getElementById(`btn-${type}`);
-      activeBtn.classList.add('bg-amber-400', 'border-slate-800', 'text-slate-900');
-      activeBtn.classList.remove('bg-slate-100', 'border-transparent', 'text-slate-600');
+      activeBtn.classList.add('bg-amber-400', 'border-slate-700');
+      activeBtn.classList.remove('bg-slate-200', 'border-transparent');
 
       const numInput = document.getElementById('numInput');
       const pTop = document.getElementById('priceTopGroup');
@@ -181,7 +178,7 @@
       labelTop.innerText = "บน";
       labelBottom.innerText = "ล่าง";
 
-      if (type === '2d' || type === '2rot') {
+      if (type === '2d') {
         numInput.maxLength = 2;
         numInput.placeholder = "00";
         pTop.style.display = 'flex';
@@ -198,12 +195,6 @@
         numInput.placeholder = "000";
         pTop.style.display = 'none';
         pBottom.style.display = 'flex';
-        pTod.style.display = 'none';
-      } else if (type === '6rot') {
-        numInput.maxLength = 3;
-        numInput.placeholder = "000";
-        pTop.style.display = 'flex';
-        pBottom.style.display = 'none';
         pTod.style.display = 'none';
       } else if (type === 'wing') {
         numInput.maxLength = 1;
@@ -228,11 +219,23 @@
       isHalfPay = !isHalfPay;
       const btn = document.getElementById('btn-half');
       if (isHalfPay) {
-        btn.classList.remove('bg-slate-100', 'text-slate-600', 'border-transparent');
+        btn.classList.remove('bg-slate-200', 'text-slate-700', 'border-transparent');
         btn.classList.add('bg-red-500', 'text-white', 'border-red-700', 'shadow-md');
       } else {
         btn.classList.remove('bg-red-500', 'text-white', 'border-red-700', 'shadow-md');
-        btn.classList.add('bg-slate-100', 'text-slate-600', 'border-transparent');
+        btn.classList.add('bg-slate-200', 'text-slate-700', 'border-transparent');
+      }
+    }
+
+    function toggleReverse() {
+      isReverse = !isReverse;
+      const btn = document.getElementById('btn-reverse');
+      if (isReverse) {
+        btn.classList.remove('bg-slate-200', 'text-slate-700', 'border-transparent');
+        btn.classList.add('bg-blue-600', 'text-white', 'border-blue-800', 'shadow-md');
+      } else {
+        btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-800', 'shadow-md');
+        btn.classList.add('bg-slate-200', 'text-slate-700', 'border-transparent');
       }
     }
 
@@ -269,31 +272,21 @@
     }
 
     function addSingleNumber(num) {
-      if (isExpired) return;
       if (!numbersList.some(item => item.num === num)) {
         numbersList.push({ num: num, isHalf: isHalfPay });
       }
     }
 
     function handleAutoAdd(input) {
-      if (isExpired) {
-        input.value = '';
-        return;
-      }
-
       input.value = input.value.replace(/[^0-9]/g, '');
       
-      let reqLen = 2;
-      if (currentType === '3d' || currentType === '3d_bottom' || currentType === '6rot') {
-        reqLen = 3;
-      } else if (currentType === 'wing' || currentType === 'rood') {
-        reqLen = 1;
-      }
+      let reqLen = (currentType === '3d' || currentType === '3d_bottom') ? 3 : 
+                   (currentType === 'wing' || currentType === 'rood') ? 1 : 2;
 
       if (input.value.length === reqLen) {
-        if (currentType === '2rot') {
+        if (currentType === '2d' && isReverse) {
           generate2RotNumbers(input.value).forEach(num => addSingleNumber(num));
-        } else if (currentType === '6rot') {
+        } else if (currentType === '3d' && isReverse) {
           getPermutations(input.value).forEach(num => addSingleNumber(num));
         } else if (currentType === 'rood') {
           generateRoodNumbers(input.value).forEach(num => addSingleNumber(num));
@@ -310,19 +303,19 @@
       box.innerHTML = '';
 
       if (numbersList.length === 0) {
-        box.innerHTML = `<span class="text-slate-400 text-xs text-center" id="emptyAccText">คีย์ตัวเลขเพื่อสะสม (กดที่เลขเพื่อลบ)</span>`;
+        box.innerHTML = `<span class="text-slate-400 text-xs w-full text-center" id="emptyAccText">คีย์ตัวเลขเพื่อสะสม (คลิกที่เลขเพื่อลบ)</span>`;
         return;
       }
 
       numbersList.forEach((item, index) => {
         const tag = document.createElement('div');
         const bgClass = item.isHalf 
-          ? 'bg-red-100 border-red-300 text-red-600' 
-          : 'bg-emerald-100 border-emerald-300 text-emerald-800';
+          ? 'bg-red-100 border-red-400 text-red-600' 
+          : 'bg-emerald-200 border-emerald-400 text-emerald-950';
 
-        tag.className = `${bgClass} border font-black px-2.5 py-0.5 rounded-lg cursor-pointer text-xs flex items-center gap-1 shadow-sm hover:opacity-80 transition`;
+        tag.className = `${bgClass} border font-extrabold px-2.5 py-0.5 rounded-lg cursor-pointer text-base flex items-center gap-1 shadow-sm hover:opacity-80 transition`;
         tag.title = 'คลิกเพื่อลบเลขนี้';
-        tag.innerHTML = `<span>${item.num}</span><span class="text-[10px] opacity-60">✕</span>`;
+        tag.innerHTML = `<span>${item.num}</span><span class="text-xs opacity-70">✕</span>`;
         
         tag.onclick = () => {
           numbersList.splice(index, 1);
@@ -333,19 +326,14 @@
     }
 
     function addNumbersToBill() {
-      if (isExpired) {
-        alert("หวยประเภทนี้ปิดรับแทงสำหรับวันที่เลือกแล้ว ไม่สามารถเพิ่มบิลได้");
-        return;
-      }
-
       const singleInput = document.getElementById('numInput');
-      let reqLen = (currentType === '3d' || currentType === '3d_bottom' || currentType === '6rot') ? 3 : 
+      let reqLen = (currentType === '3d' || currentType === '3d_bottom') ? 3 : 
                    (currentType === 'wing' || currentType === 'rood') ? 1 : 2;
 
       if (singleInput.value.length === reqLen) {
-        if (currentType === '2rot') {
+        if (currentType === '2d' && isReverse) {
           generate2RotNumbers(singleInput.value).forEach(num => addSingleNumber(num));
-        } else if (currentType === '6rot') {
+        } else if (currentType === '3d' && isReverse) {
           getPermutations(singleInput.value).forEach(num => addSingleNumber(num));
         } else if (currentType === 'rood') {
           generateRoodNumbers(singleInput.value).forEach(num => addSingleNumber(num));
@@ -373,22 +361,15 @@
         typeTitle = '2 ตัว';
         priceFormat = `${topVal} x ${bottomVal}`;
         multiplier = topVal + bottomVal;
-      } else if (currentType === '2rot') {
-        typeTitle = '2 กลับ';
-        priceFormat = `${topVal} x ${bottomVal}`;
-        multiplier = topVal + bottomVal;
       } else if (currentType === '3d') {
         typeTitle = '3 ตัว';
         priceFormat = `${topVal} x ${todVal}`;
         multiplier = topVal + todVal;
       } else if (currentType === '3d_bottom') {
-        typeTitle = '3 ตัว';
-        priceFormat = `0 x ${bottomVal}`;
+        typeTitle = '3 ตัวล่าง';
+        labelFormat = 'xล่าง';
+        priceFormat = `${bottomVal}`;
         multiplier = bottomVal;
-      } else if (currentType === '6rot') {
-        typeTitle = '6 กลับ';
-        priceFormat = `${topVal} x 0`;
-        multiplier = topVal;
       } else if (currentType === 'wing') {
         typeTitle = 'วิ่ง';
         labelFormat = 'วิ่งบน x วิ่งล่าง';
@@ -423,6 +404,7 @@
 
       renderAccumulated();
       renderBill();
+      updateTransactionTime();
     }
 
     function renderBill() {
@@ -430,9 +412,9 @@
       billBox.innerHTML = '';
 
       if (billGroups.length === 0) {
-        billBox.innerHTML = `<div class="text-center text-slate-400 text-xs py-8" id="emptyBillText">ยังไม่มีรายการในบิลนี้</div>`;
+        billBox.innerHTML = `<div class="text-center text-slate-400 text-sm py-6 bg-white" id="emptyBillText">ยังไม่มีรายการในบิลนี้</div>`;
         document.getElementById('totalAmount').innerText = '0.00';
-        document.getElementById('transactionTime').innerText = 'เวลาทำรายการ: -';
+        document.getElementById('createdTimeDisplay').innerText = 'เวลาทำรายการ: -';
         return;
       }
 
@@ -442,27 +424,28 @@
         grandTotal += group.totalPrice;
 
         const row = document.createElement('div');
-        // ปรับแก้ส่วนแสดงตัวเลขให้ขยายเต็มความสูงเช่นกัน
-        row.className = 'grid grid-cols-12 items-center bg-white p-2 text-xs';
+        row.className = 'grid grid-cols-12 items-center bg-white min-h-[60px]';
         
         row.innerHTML = `
-          <div class="col-span-4 bg-slate-100 p-2 text-center rounded-xl border border-slate-200">
-            <div class="text-slate-800 font-bold">${group.typeTitle}</div>
-            <div class="text-[10px] text-slate-500">${group.labelFormat}</div>
-            <div class="text-amber-600 font-black mt-0.5">${group.priceFormat}</div>
+          <div class="col-span-4 bg-blue-100/60 p-2 text-center border-r border-blue-200 self-stretch flex flex-col justify-center">
+            <div class="text-slate-700 font-normal text-xs md:text-sm">${group.typeTitle}</div>
+            <div class="text-slate-500 font-normal text-xs md:text-sm">${group.labelFormat}</div>
+            <div class="text-neutral-800 font-bold text-xs md:text-sm">${group.priceFormat}</div>
           </div>
 
-          <div class="col-span-7 px-3 font-extrabold text-slate-800 text-sm flex flex-wrap gap-1.5 items-center">
+          <div class="col-span-7 p-2.5 font-bold text-base md:text-lg leading-relaxed flex flex-wrap gap-x-2 gap-y-1 items-center max-h-[150px] overflow-y-auto">
             ${group.numbers.map(item => `
-              <span class="${item.isHalf ? 'text-red-500 font-black' : ''}">
+              <span class="${item.isHalf ? 'text-red-600 font-bold' : 'text-stone-800'}">
                 ${item.num}
               </span>
             `).join('')}
           </div>
 
-          <div class="col-span-1 text-center">
-            <button onclick="removeGroup(${idx})" class="text-red-400 hover:text-red-600 p-1" title="ลบรายการนี้">
-              ✕
+          <div class="col-span-1 p-1 text-center flex justify-center items-center">
+            <button onclick="removeGroup(${idx})" class="text-red-400 hover:text-red-600 transition p-1" title="ลบรายการนี้">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
             </button>
           </div>
         `;
@@ -471,21 +454,6 @@
       });
 
       document.getElementById('totalAmount').innerText = grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-      // ดึง วัน เดือน ปี เวลา ปัจจุบันมาอัปเดตที่ท้ายบิล
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-      const timeStr = now.toLocaleTimeString('th-TH', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-
-      document.getElementById('transactionTime').innerText = `ทำรายการเมื่อ: ${dateStr} เวลา ${timeStr} น.`;
     }
 
     function removeGroup(index) {
@@ -508,20 +476,35 @@
     function updateLottoConfig() {
       if (timerInterval) clearInterval(timerInterval);
 
-      const lottoKey = document.getElementById('lottoType').value;
+      const lottoType = document.getElementById('lottoType').value;
       const dateVal = document.getElementById('lottoDate').value;
-      const addBillBtn = document.getElementById('addBillBtn');
-      const numInput = document.getElementById('numInput');
 
       if (!dateVal) return;
 
-      const lottoInfo = LOTTO_CONFIG[lottoKey];
       const [year, month, day] = dateVal.split('-').map(Number);
       
-      const formattedDate = `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0')}-${year}`;
-      document.getElementById('lottoHeaderDisplay').innerText = `${lottoInfo.name} - ${formattedDate}`;
+      let closeHour = 20;
+      let closeMinute = 20;
+      let lottoName = 'หวย';
 
-      const targetTime = new Date(year, month - 1, day, lottoInfo.hour, lottoInfo.minute, 0).getTime();
+      if (lottoType === 'TH') {
+        closeHour = 15; closeMinute = 20; lottoName = '[รัฐบาล] หวยไทย';
+      } else if (lottoType === 'LAO') {
+        closeHour = 20; closeMinute = 20; lottoName = '[ต่างประเทศ] หวยลาว';
+      } else if (lottoType === 'LAO_STAR') {
+        closeHour = 15; closeMinute = 30; lottoName = '[ต่างประเทศ] หวยลาวสตาร์';
+      } else if (lottoType === 'HANOI_SPECIAL') {
+        closeHour = 17; closeMinute = 0; lottoName = '[ต่างประเทศ] หวยฮานอยพิเศษ';
+      } else if (lottoType === 'HANOI_NORMAL') {
+        closeHour = 18; closeMinute = 0; lottoName = '[ต่างประเทศ] หวยฮานอยปกติ';
+      } else if (lottoType === 'HANOI_VIP') {
+        closeHour = 19; closeMinute = 0; lottoName = '[ต่างประเทศ] หวยฮานอย VIP';
+      }
+
+      const formattedDate = `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0')}-${year}`;
+      document.getElementById('lottoHeaderDisplay').innerText = `${lottoName} - ${formattedDate}`;
+
+      const targetTime = new Date(year, month - 1, day, closeHour, closeMinute, 0).getTime();
 
       timerInterval = setInterval(() => {
         const now = new Date().getTime();
@@ -530,23 +513,8 @@
         if (diff <= 0) {
           clearInterval(timerInterval);
           document.getElementById('countdown').innerText = "ปิดรับแทงแล้ว";
-          isExpired = true;
-
-          // ระงับการใช้งานปุ่มและช่องกรอกถ้าหมดเวลา
-          addBillBtn.disabled = true;
-          addBillBtn.classList.remove('bg-slate-900', 'hover:bg-slate-800', 'text-amber-400');
-          addBillBtn.classList.add('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
-          numInput.disabled = true;
-          numInput.placeholder = "ปิด";
           return;
         }
-
-        // กรณีเวลาปลดล็อก (ยังไม่ปิดรับ)
-        isExpired = false;
-        addBillBtn.disabled = false;
-        addBillBtn.classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
-        addBillBtn.classList.add('bg-slate-900', 'hover:bg-slate-800', 'text-amber-400');
-        numInput.disabled = false;
 
         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
