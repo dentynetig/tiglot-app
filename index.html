@@ -21,10 +21,10 @@
 
   <div class="bg-white/95 backdrop-blur-xl border-blue-200 rounded-2xl p-5 w-full max-w-xl shadow-lg space-y-3" id="captureArea">
     
-    <!-- เมนูตัวเลือกหวย -->
-    <div class="flex items-center justify-between bg-blue-100/60 p-2.5 rounded-xl border border-blue-200">
-      <div class="flex items-center gap-2">
-        <select id="lottoType" onchange="updateLottoConfig()" class="font-bold text-slate-700 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs md:text-sm outline-none shadow-sm focus:border-blue-500">
+    <!-- เมนูตัวเลือกหวย (ปรับ Responsive ให้รองรับจอมือถือ) -->
+<div class="flex flex-col sm:flex-row items-center justify-between bg-blue-100/60 p-2.5 rounded-xl border border-blue-200 gap-2">
+  <div class="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
+    <select id="lottoType" onchange="updateLottoConfig()" class="flex-1 sm:flex-none font-bold text-slate-700 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs md:text-sm outline-none shadow-sm focus:border-blue-500 min-w-0">
           <option value="LAO">หวยลาว ปิด20:20น.</option>
           <option value="TH" selected>หวยไทย ปิด15:20น.</option>
           <option value="LAO_STAR">หวยลาวสตาร์ ปิด15:30น.</option>
@@ -32,13 +32,14 @@
           <option value="HANOI_NORMAL">หวยฮานอยปกติปิด18:00น.</option>
           <option value="HANOI_VIP">หวยฮานอย VIPปิด19:00น.</option>
         </select>
-        <input type="date" id="lottoDate" onchange="updateLottoConfig()" class="text-xs md:text-sm border border-slate-300 rounded-lg p-1 font-semibold text-slate-700 bg-white shadow-sm outline-none focus:border-blue-500">
-      </div>
-      <div class="text-xs md:text-sm font-bold text-red-500 flex items-center gap-1">
-        <span class="text-slate-500 font-normal">เหลือเวลา</span>
-        <span id="countdown">00:00:00</span>
-      </div>
-    </div>
+        <input type="date" id="lottoDate" onchange="updateLottoConfig()" class="text-xs md:text-sm border border-slate-300 rounded-lg p-1.5 font-semibold text-slate-700 bg-white shadow-sm outline-none focus:border-blue-500">
+  </div>
+  
+  <div class="text-xs md:text-sm font-bold text-red-500 flex items-center justify-center gap-1.5 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-blue-200/60">
+    <span class="text-slate-500 font-normal">เหลือเวลา</span>
+    <span id="countdown" class="font-mono text-sm md:text-base">00:00:00</span>
+  </div>
+</div>
 
     <!-- 1. ปุ่มเลือกประเภทเลข + ปุ่มกลับเลข + ปุ่มจ่ายครึ่ง -->
     <div class="flex flex-wrap justify-center gap-1.5 items-center">
