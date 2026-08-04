@@ -29,8 +29,8 @@
           <option value="TH" selected>หวยไทย ปิด15:20น.</option>
           <option value="LAO_STAR">หวยลาวสตาร์ ปิด15:30น.</option>
           <option value="HANOI_SPECIAL">หวยฮานอยพิเศษ ปิด17:00น.</option>
-          <option value="HANOI_NORMAL">หวยฮานอยปกติปิด18:00น.</option>
-          <option value="HANOI_VIP">หวยฮานอย VIPปิด19:00น.</option>
+          <option value="HANOI_NORMAL">หวยฮานอยปกติ ปิด18:00น.</option>
+          <option value="HANOI_VIP">หวยฮานอย VIP ปิด19:00น.</option>
         </select>
         <input type="date" id="lottoDate" onchange="updateLottoConfig()" class="text-xs md:text-sm border border-slate-300 rounded-lg p-1.5 font-semibold text-slate-700 bg-white shadow-sm outline-none focus:border-blue-500">
   </div>
@@ -364,13 +364,14 @@
         multiplier = topVal + bottomVal;
       } else if (currentType === '3d') {
         typeTitle = '3 ตัว';
+        labelFormat = 'บน x โต๊ด';
         priceFormat = `${topVal} x ${todVal}`;
         multiplier = topVal + todVal;
       } else if (currentType === '3d_bottom') {
         typeTitle = '3 ตัวล่าง';
-        labelFormat = 'xล่าง';
-        priceFormat = `${bottomVal}`;
-        multiplier = bottomVal;
+        labelFormat = 'บน x ล่าง';
+        priceFormat = `${topVal} x ${bottomVal}`;
+        multiplier = topVal + bottomVal;
       } else if (currentType === 'wing') {
         typeTitle = 'วิ่ง';
         labelFormat = 'วิ่งบน x วิ่งล่าง';
@@ -428,13 +429,13 @@
         row.className = 'grid grid-cols-12 items-center bg-white min-h-[60px]';
         
         row.innerHTML = `
-          <div class="col-span-4 bg-blue-100/60 p-2 text-center border-r border-blue-200 self-stretch flex flex-col justify-center">
+          <div class="col-span-3 bg-blue-100/90 p-2 text-center border-r border-blue-200 self-stretch flex flex-col justify-center">
             <div class="text-slate-700 font-normal text-xs md:text-sm">${group.typeTitle}</div>
             <div class="text-slate-500 font-normal text-xs md:text-sm">${group.labelFormat}</div>
             <div class="text-neutral-800 font-bold text-xs md:text-sm">${group.priceFormat}</div>
           </div>
 
-          <div class="col-span-7 p-2.5 font-bold text-base md:text-lg leading-relaxed flex flex-wrap gap-x-2 gap-y-1 items-center max-h-[150px] overflow-y-auto">
+          <div class="col-span-8 p-2.5 font-bold text-base md:text-lg leading-relaxed flex flex-wrap gap-x-2 gap-y-1 items-center max-h-[150px] overflow-y-auto">
             ${group.numbers.map(item => `
               <span class="${item.isHalf ? 'text-red-600 font-bold' : 'text-stone-800'}">
                 ${item.num}
